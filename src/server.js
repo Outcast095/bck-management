@@ -1,12 +1,15 @@
 import express from 'express';
 
+// Import Routes
+import movieRoutes from "./routes/movieRoutes.js";
+
+
 const app = express();
 const PORT = 5001;      
 
 
-app.get('/', (req, res) => {
-    res.json({message: "Hello world"});
-});
+// API Routes
+app.use("/movies", movieRoutes);
 
 
 

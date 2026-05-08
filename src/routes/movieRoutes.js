@@ -2,6 +2,11 @@ import express from "express";
 
 const router = express.Router();
 
+
+// req - полученная информация от клиента, 
+// res - ответ который мы отправляем клиенту.
+
+
 router.get("/", (req, res) => {
   res.json({ httpMethod: "get" });
 });
