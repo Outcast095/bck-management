@@ -1,13 +1,82 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+//это файл schema.prisma, он находится в корневой папке проекта,
+// Настройка генератора: указывает Prisma создать JS-клиент, 
+// через который ты будешь делать запросы (prisma.user.findMany и т.д.)
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider   = "prisma-client-js"
+  engineType = "library" // Используем стандартную библиотеку движка для Node.js
 }
 
+// Настройка источника данных: подключаемся к PostgreSQL
 datasource db {
   provider = "postgresql"
+}
+
+// МОДЕЛЬ ПОЛЬЗОВАТЕЛЯ (Таблица "User")
+model User {
+  id       String @id @default(uuid()) // Уникальный ID в формате UUID UUID выглядит как длинная строка из 36 символов (32 цифры и буквы + 4 дефиса)
+  name     String // Имя пользователя
+  email    String @unique // Email (уникальный, нельзя создать два одинаковых)
+  password String // Хэш пароля
+
+  createdAt DateTime @default(now()) // Дата регистрации (ставится автоматически)
+
+  // СВЯЗИ (Relations):
+  // Список фильмов, которые создал этот пользователь
+  movies         Movie[]         @relation("MovieCreator")
+  // Список элементов в списке ожидания пользователя
+  watchlistItems WatchlistItem[]
+}
+
+// МОДЕЛЬ ФИЛЬМА (Таблица "Movie")
+model Movie {
+  id          String   @id @default(uuid()) // Уникальный ID фильма
+  title       String // Название фильма
+  overview    String? // Описание (может быть пустым - опционально)
+  releaseYear Int // Год выпуска
+  genres      String[] @default([]) // Массив жанров (по умолчанию пустой список)
+  runtime     Int? // Длительность в минутах (опционально)
+  posterUrl   String? // Ссылка на постер (опционально)
+  createdBy   String // ID пользователя, который добавил фильм
+  createdAt   DateTime @default(now()) // Дата добавления в базу
+
+  // Настройка связи с создателем:
+  // fields: [createdBy] — это поле в текущей таблице
+  // references: [id] — ссылается на поле id в таблице User
+  // onDelete: Cascade — если удалить пользователя, удалятся и все его фильмы
+  creator User @relation("MovieCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  // Связь: в каких списках "Watchlist" фигурирует этот фильм
+  watchlistItems WatchlistItem[]
+}
+
+// МОДЕЛЬ СПИСКА ОЖИДАНИЯ (Промежуточная таблица "WatchlistItem")
+// Связывает Пользователя и Фильм (многие-ко-многим с доп. полями)
+model WatchlistItem {
+  id      String @id @default(uuid()) // Уникальный ID записи
+  userId  String // Ссылка на пользователя
+  movieId String // Ссылка на фильм
+
+  // Статус просмотра (использует ENUM ниже)
+  status WatchlistStatus @default(PLANNED)
+
+  rating    Int? // Личная оценка пользователя (1-10)
+  notes     String? // Личные заметки
+  createdAt DateTime @default(now()) // Когда добавил в список
+  updatedAt DateTime @default(now()) // Когда обновлял запись (например, сменил статус)
+
+  // Определение связей
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  // УНИКАЛЬНОСТЬ: Пользователь не может добавить один и тот же фильм в свой список дважды
+  @@unique([userId, movieId])
+}
+
+// ПЕРЕЧИСЛЕНИЕ (Enum): Ограниченный набор возможных статусов
+enum WatchlistStatus {
+  PLANNED // В планах
+  WATCHING // Смотрю сейчас
+  COMPLETED // Просмотрено
+  DROPPED // Брошено
 }

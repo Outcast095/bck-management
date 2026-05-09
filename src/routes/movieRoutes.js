@@ -1,3 +1,6 @@
+// это файл movieRoutes.js, 
+// она находится по адресу src/routes/movieRoutes.js
+
 import express from "express";
 
 const router = express.Router();
