@@ -7,6 +7,8 @@ import { connectDB, disconnectDB } from "./config/db.js";
 
 // Import Routes
 import movieRoutes from "./routes/movieRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import watchlistRoutes from "./routes/watchlistRoutes.js";
 
 
 config(); // Загружаем переменные окружения из .env файла
@@ -17,12 +19,14 @@ const app = express();
 
 // Body parsing middlwares
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // Позволяет обрабатывать данные из форм в теле запросов 
+
 
 
 // API Routes
 app.use("/movies", movieRoutes);
-
+app.use("/auth", authRoutes);
+app.use("/watchlist", watchlistRoutes);
 
 
 const server = app.listen(process.env.PORT || 5001, "0.0.0.0", () => {
